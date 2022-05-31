@@ -113,7 +113,7 @@ def enroll(request, course_id):
 def submit(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
-
+ 
     enrollment = Enrollment.objects.get(user=user, course=course)
     submission = Submission.objects.create(enrollment=enrollment)
 
@@ -144,18 +144,23 @@ def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
 
-    choices = submission.objects.get('choices').all()
+    choices = submission.choices.all()
     grade_sum = 0
+    grade_max = 0
     selected_ids = []
     for choice in choices:
         selected_ids.append(choice.id)
+        grade_max = grade_max + choice.question.grade
         if choice.is_correct:
             grade_sum = grade_sum + choice.question.grade
+
+    grade = 100*grade_sum/grade_max
 
     context = {}
     context['course'] = course
     context['selected_ids'] = selected_ids
-    context['grade'] = grade_sum
+    context['grade'] = grade
+    
 
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
     
